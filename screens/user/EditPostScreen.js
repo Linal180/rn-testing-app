@@ -8,7 +8,8 @@ import {
   FlatList,
   KeyboardAvoidingView,
   ScrollView,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import {HeaderButtons, Item} from 'react-navigation-header-buttons';
 
@@ -45,15 +46,15 @@ const formReducer = (state, action) => {
 };
 
 const EditPostScreen = (props) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState();
+
   const postId = props.navigation.getParam('postId');
   const editedPost = useSelector((state) =>
     state.posts.userPosts.find((post) => post.id === postId)
   );
   const dispatch = useDispatch();
-  
-  const [fromCity, setFromCity] = useState(editedPost ? editedPost.fromCity : '');
-  const [toCity, setToCity] = useState(editedPost ? editedPost.toCity : '');
-  const [maxPersons, setMaxPersons] = useState(editedPost ? editedPost.maxPersons : '');
+
   const [formState, dispatchFormState] = useReducer(formReducer, {
     inputValues: {
       fromCity: editedPost ? editedPost.fromCity : '',
@@ -70,51 +71,73 @@ const EditPostScreen = (props) => {
     formIsValid: editedPost ? true : false,
   });
 
-  const submitHandler = useCallback(() => {
+
+  useEffect(() => {
+    if(error){
+      Alert.alert("An error Occured!", error, [{ text: 'Okay'}]);
+    }
+  })
+  const submitHandler = useCallback(async () => {
     if (!formState.formIsValid) {
       Alert.alert('Wrong input!', 'Please check the errors in the form.', [
         {text: 'Okay'},
       ]);
       return;
     }
-    if (editedPost) {
-      dispatch(
-        postActions.updatePost(
-          postId,
-          formState.inputValues.fromCity,
-          formState.inputValues.toCity,
-          formState.inputValues.maxPersons
-        )
-      );
-    } else {
-      dispatch(
-        postActions.createPost(
-          formState.inputValues.fromCity,
-          formState.inputValues.toCity,
-          formState.inputValues.maxPersons,
-          formState.inputValues.fare
-        )
-      );
+    setError(null);
+    setIsLoading(true);
+    try {
+      if (editedPost) {
+        await dispatch(
+          postActions.updatePost(
+            postId,
+            formState.inputValues.fromCity,
+            formState.inputValues.toCity,
+            formState.inputValues.maxPersons
+          )
+        );
+      } else {
+        await dispatch(
+          postActions.createPost(
+            formState.inputValues.fromCity,
+            formState.inputValues.toCity,
+            formState.inputValues.maxPersons,
+            formState.inputValues.fare
+          )
+        );
+      }
+      props.navigation.goBack();
+    } catch (error) {
+      setError(error.message);
     }
-    props.navigation.goBack();
+    setIsLoading(false);
+
   }, [dispatch, postId, formState]);
 
   useEffect(() => {
     props.navigation.setParams({submit: submitHandler});
   }, [submitHandler]);
 
+
   const inputChangeHandler = useCallback(
     (inputIdentifier, inputValue, inputValidity) => {
-      console.log(inputIdentifier, inputValue, inputValidity, "Setting in inputHandler")
       dispatchFormState({
         type: FORM_INPUT_UPDATE,
         value: inputValue,
         isValid: inputValidity,
-        input: inputIdentifier,
+        input: inputIdentifier
       });
     },
     [dispatchFormState]
   );
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -168,7 +191,6 @@ const EditPostScreen = (props) => {
               label="Total Fare"
               errorText="Please enter a valid Amount"
               keyboardType="numeric"
-              returnKeyType="next"
               onInputChange={inputChangeHandler}
               initialValue={editedPost ? editedPost.fare : ''}
               initiallyValid={!!editedPost}
@@ -188,7 +210,7 @@ EditPostScreen.navigationOptions = (navData) => {
     headerTitle: navData.navigation.getParam('postId')
       ? 'Edit Post'
       : 'Add Post',
-    headerRight: (
+    headerRight: () => (
       <HeaderButtons HeaderButtonComponent={HeaderButton}>
         <Item
           title="Save"
@@ -202,6 +224,15 @@ EditPostScreen.navigationOptions = (navData) => {
   };
 };
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  form: {
+    margin: 20,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+});
 
 export default EditPostScreen;

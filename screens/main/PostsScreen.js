@@ -1,31 +1,86 @@
-import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import {View, Text, StyleSheet, FlatList, Button, Alert} from 'react-native';
+import React, {useEffect, useState, useCallback} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Button,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import {HeaderButtons, Item} from 'react-navigation-header-buttons';
 
 import HeaderButton from '../../components/UI/HeaderButton';
 import POSTS from '../../data/dummy-data';
 import Post from '../../components/main/post';
+import * as postActions from '../../store/actions/post';
+import Colors from '../../constants/Colors';
 
 const PostsScreen = (props) => {
-  const posts = useSelector(state => state.posts.availablePosts);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState();
+
+  const posts = useSelector((state) => state.posts.availablePosts);
+
   const dispatch = useDispatch();
 
-
-
-  const joinHandler = (id) => {
-    const post = POSTS.find((post) => post.id == id);
-    if (post.personsJoined < post.maxPersons && post.status == 'active') {
-      post.personsJoined = parseInt(post.personsJoined) + 1;
-    } else {
-      Alert.alert('Sorry!', 'This post is not available anymore', [
-        {text: 'Okay'},
-      ]);
+  const loadPosts = useCallback(async () => {
+    setError(null);
+    setIsRefreshing(true);
+    try {
+      await dispatch(postActions.fetchPosts());
+    } catch (error) {
+      setError(error.message);
     }
-  };
+    setIsRefreshing(false);
+  }, [dispatch, setIsLoading, setError]);
+
+  useEffect(() => {
+    const willFocusSub = props.navigation.addListener('willFocus', loadPosts);
+
+    return () => {
+      willFocusSub.remove();
+    };
+  }, [loadPosts]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    loadPosts().then(() => {
+      setIsLoading(false);
+    });
+  }, [dispatch, loadPosts]);
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text>An Error Occured!</Text>
+        <Button title="Try Again" onPress={loadPosts} color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (!isLoading && posts.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Text>No post found.</Text>
+      </View>
+    );
+  }
 
   return (
     <FlatList
+      onRefresh={loadPosts}
+      refreshing={isRefreshing}
       data={posts}
       keyExtractor={(item) => item.id}
       renderItem={(itemData) => (
@@ -67,6 +122,12 @@ PostsScreen.navigationOptions = (navData) => {
   };
 };
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default PostsScreen;

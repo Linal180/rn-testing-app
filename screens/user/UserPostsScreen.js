@@ -10,6 +10,7 @@ import * as postActions from '../../store/actions/post';
 
 
 const UserPostsScreen = (props) => {
+
   const userPosts = useSelector(state => state.posts.userPosts);
   const dispatch = useDispatch();
 
@@ -32,6 +33,17 @@ const UserPostsScreen = (props) => {
       }
     ]);
   };
+
+
+
+
+  if (userPosts.length === 0) {
+    return (
+      <View style={styles.center}>
+        <Text>No post found. Maybe start posting some!</Text>
+      </View>
+    );
+  }
 
 
   return (
@@ -90,6 +102,12 @@ UserPostsScreen.navigationOptions = (navData) => {
   };
 };
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default UserPostsScreen;

@@ -1,16 +1,20 @@
 import React from 'react';
-import { createStore, combineReducers } from 'redux';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
 import { Provider } from 'react-redux';
 import { StyleSheet, Text, View } from 'react-native';
+import ReduxThunk from 'redux-thunk';
+
 
 import Navigator from './navigation/Navigator';
 import postsReducer from './store/reducers/post';
+import authReducer from './store/reducers/auth';
 
 const rootReducer = combineReducers({
-  posts: postsReducer
+  posts: postsReducer,
+  auth: authReducer
 });
 
-const store = createStore(rootReducer);
+const store = createStore(rootReducer, applyMiddleware(ReduxThunk));
 
 
 export default function App() {

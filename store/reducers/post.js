@@ -1,24 +1,22 @@
 import POSTS from '../../data/dummy-data';
-import {
-  JOIN,
-  DELETE,
-  UPDATE,
-  SEARCH,
-  updatePost,
-  CREATE,
-} from '../actions/post';
+import {JOIN, DELETE, UPDATE, SEARCH, CREATE, SET_POSTS} from '../actions/post';
 import Post from '../../models/post';
 
 const initialState = {
-  availablePosts: POSTS,
-  userPosts: POSTS.filter((prod) => prod.userId === 'u1'),
+  availablePosts: [],
+  userPosts: [],
 };
 
 export default (state = initialState, action) => {
   switch (action.type) {
+    case SET_POSTS:
+      return {
+        availablePosts: action.posts,
+        userPosts: action.userPosts,
+      };
     case CREATE:
       const newPost = new Post(
-        new Date().toString(),
+        action.postData.id,
         'u1',
         action.postData.fromCity,
         action.postData.toCity,
@@ -47,8 +45,7 @@ export default (state = initialState, action) => {
       const postIndex = state.userPosts.findIndex(
         (post) => post.id === action.pid
       );
-      const post = state.userPosts.find(post => post.id === action.pid);
-        console.log(action.postData.fromCity,'from');
+      const post = state.userPosts.find((post) => post.id === action.pid);
       const updatedPost = new Post(
         action.pid,
         post.userId,
@@ -60,7 +57,7 @@ export default (state = initialState, action) => {
         post.fare,
         post.status
       );
-      console.log(updatedPost, 'After Model');
+
       const updatedUserPosts = [...state.userPosts];
       updatedUserPosts[postIndex] = updatedPost;
 
@@ -76,6 +73,8 @@ export default (state = initialState, action) => {
         userPosts: updatedUserPosts,
       };
     case SEARCH:
+    default:
+      return state;
   }
   return state;
 };
