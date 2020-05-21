@@ -1,7 +1,17 @@
-
+import moment from 'moment';
 
 class Post {
-  constructor(id, userId, fromCity, toCity, date, maxPersons, personsJoined, fare, status) {
+  constructor(
+    id,
+    userId,
+    fromCity,
+    toCity,
+    date,
+    maxPersons,
+    personsJoined,
+    fare,
+    status
+  ) {
     this.id = id;
     this.userId = userId;
     this.fromCity = fromCity;

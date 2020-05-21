@@ -4,7 +4,8 @@ import { Text, View, ActivityIndicator, StyleSheet, AsyncStorage } from 'react-n
 
 import Colors from '../constants/Colors';
 import * as authAction from '../store/actions/auth';
-
+import * as postsActions from '../store/actions/post';
+import * as accountActions from '../store/actions/account';
 
 const StartupScreen = props => {
     const dispatch = useDispatch();
@@ -27,10 +28,12 @@ const StartupScreen = props => {
             const expirationTime = expirationDate.getTime() - new Date().getTime();
 
             props.navigation.navigate('Post');
-            dispatch(authAction.authenticate(userId, token));
+            dispatch(authAction.authenticate(userId, token, expirationTime));
         };
 
         tryLogin();
+        dispatch(postsActions.fetchPosts());
+        dispatch(accountActions.fetchAccounts());
     }, [dispatch])
 
     return(

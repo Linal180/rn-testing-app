@@ -8,29 +8,35 @@ import {
   Button,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import {HeaderButtons, Item} from 'react-navigation-header-buttons';
 
 import HeaderButton from '../../components/UI/HeaderButton';
 import POSTS from '../../data/dummy-data';
-import Post from '../../components/main/post';
-import * as postActions from '../../store/actions/post';
+import Post from '../../components/main/post1';
+import * as postsActions from '../../store/actions/post';
+import * as poolsActions from '../../store/actions/pools';
 import Colors from '../../constants/Colors';
+import {TextInput, ScrollView} from 'react-native-gesture-handler';
 
 const PostsScreen = (props) => {
+  const [searchShow, setSearchShow] = useState(false);
+  const [fromCity, setFromCity] = useState('');
+  const [toCity, setToCity] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState();
 
   const posts = useSelector((state) => state.posts.availablePosts);
-
+  const accounts = useSelector((state) => state.account.accounts);
   const dispatch = useDispatch();
 
   const loadPosts = useCallback(async () => {
     setError(null);
     setIsRefreshing(true);
     try {
-      await dispatch(postActions.fetchPosts());
+      await dispatch(postsActions.fetchPosts());
     } catch (error) {
       setError(error.message);
     }
@@ -51,6 +57,41 @@ const PostsScreen = (props) => {
       setIsLoading(false);
     });
   }, [dispatch, loadPosts]);
+
+  const joinHandler = (post) => {
+    if (moment(post.date).diff(moment()) < 0) {
+      Alert.alert(
+        'Pool Expired!',
+        'Sorry! This pool is expired. Try some other!',
+        [{text: 'Okay'}]
+      );
+      return;
+    }
+    dispatch(postsActions.joinPool(post));
+  };
+
+  const selectPostHandler = (id) => {
+    props.navigation.navigate('PostDetail', {
+      postId: id,
+    });
+  };
+  const searchShowHandler = () => {
+    setSearchShow((prevState) => !prevState);
+  };
+
+  const fromCityHandler = (fromCityName) => {
+    setFromCity(fromCityName);
+  };
+
+  const toCityHandler = (toCityName) => {
+    setToCity(toCityName);
+  };
+
+  const submitSearchHandler = () => {
+    dispatch(postsActions.searchPost(fromCity, toCity));
+    setFromCity('');
+    setToCity('');
+  };
 
   if (error) {
     return (
@@ -78,36 +119,38 @@ const PostsScreen = (props) => {
   }
 
   return (
-    <FlatList
-      onRefresh={loadPosts}
-      refreshing={isRefreshing}
-      data={posts}
-      keyExtractor={(item) => item.id}
-      renderItem={(itemData) => (
-        <Post
-          fromCity={itemData.item.fromCity}
-          toCity={itemData.item.toCity}
-          date={itemData.item.date}
-          maxPersons={itemData.item.maxPersons}
-          personsJoined={itemData.item.personsJoined}
-          fare={itemData.item.fare}
-          status={itemData.item.status}
-        >
-          <Button
-            title="Join"
-            onPress={() => {
-              joinHandler(itemData.item.id);
-            }}
-          />
-        </Post>
-      )}
-    />
+    <View>
+      <ScrollView>
+        <FlatList
+          onRefresh={loadPosts}
+          refreshing={isRefreshing}
+          data={posts}
+          inverted={true}
+          keyExtractor={(item) => item.id}
+          renderItem={(itemData) => (
+            <Post
+              post={itemData.item}
+              onSelect={() => {
+                selectPostHandler(itemData.item.id);
+              }}
+            >
+              <Button
+                title="Join"
+                onPress={() => {
+                  joinHandler(itemData.item);
+                }}
+              />
+            </Post>
+          )}
+        />
+      </ScrollView>
+    </View>
   );
 };
 
 PostsScreen.navigationOptions = (navData) => {
   return {
-    headerTitle: 'All Posts',
+    headerTitle: 'All Rides',
     headerLeft: () => (
       <HeaderButtons HeaderButtonComponent={HeaderButton}>
         <Item
@@ -123,10 +166,43 @@ PostsScreen.navigationOptions = (navData) => {
 };
 
 const styles = StyleSheet.create({
+  inputBox: {
+    borderColor: 'red',
+    borderRadius: 30,
+  },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  searchButton: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'blue',
+  },
+  searchText: {
+    borderRadius: 64,
+    width: '40%',
+    maxWidth: 40,
+    height: '40%',
+    maxHeight: 40,
+  },
+  searchContainer: {
+    shadowColor: 'black',
+    shadowOpacity: 0.26,
+    shadowOffset: {width: 0, height: 2},
+    shadowRadius: 8,
+    elevation: 5,
+    borderRadius: 10,
+    backgroundColor: 'white',
+    height: 140,
+    margin: 20,
+  },
+  input: {
+    borderColor: 'red',
+    color: 'red',
   },
 });
 

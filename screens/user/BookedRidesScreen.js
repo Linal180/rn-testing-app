@@ -5,11 +5,9 @@ import {HeaderButtons, Item} from 'react-navigation-header-buttons';
 
 import HeaderButton from '../../components/UI/HeaderButton';
 import Post from '../../components/main/post1';
-import Colors from '../../constants/Colors';
-import * as postActions from '../../store/actions/post';
 
-const UserPostsScreen = (props) => {
-  const hostedRides = useSelector((state) => state.posts.hostedRides);
+const BookedRidesScreen = (props) => {
+  const bookedRides = useSelector((state) => state.posts.bookedRides);
   const dispatch = useDispatch();
 
   const selectPostHandler = (id) => {
@@ -18,30 +16,17 @@ const UserPostsScreen = (props) => {
     });
   };
 
-  const deleteHandler = (id) => {
-    Alert.alert('Are you sure?', 'Do you really want to delete this post?', [
-      {text: 'No', style: 'default'},
-      {
-        text: 'Yes',
-        style: 'destructive',
-        onPress: () => {
-          dispatch(postActions.deletePost(id));
-        },
-      },
-    ]);
-  };
-
-  if (hostedRides.length === 0) {
+  if (bookedRides.length === 0) {
     return (
       <View style={styles.center}>
-        <Text>No post found. Maybe start posting some!</Text>
+        <Text>No post found. Maybe start booking some!</Text>
       </View>
     );
   }
 
   return (
     <FlatList
-      data={hostedRides}
+      data={bookedRides}
       keyExtractor={(item) => item.id}
       renderItem={(itemData) => (
         <Post
@@ -56,21 +41,15 @@ const UserPostsScreen = (props) => {
           onSelect={() => {
             selectPostHandler(itemData.item.id);
           }}
-        >
-          <Button
-            title="Delete"
-            onPress={deleteHandler.bind(this, itemData.item.id)}
-            color={Colors.danger}
-          />
-        </Post>
+        ></Post>
       )}
     />
   );
 };
 
-UserPostsScreen.navigationOptions = (navData) => {
+BookedRidesScreen.navigationOptions = (navData) => {
   return {
-    headerTitle: 'Hosted Rides',
+    headerTitle: 'Booked Rides',
     headerLeft: () => (
       <HeaderButtons HeaderButtonComponent={HeaderButton}>
         <Item
@@ -78,17 +57,6 @@ UserPostsScreen.navigationOptions = (navData) => {
           iconName={Platform.OS === 'android' ? 'md-menu' : 'ios-menu'}
           onPress={() => {
             navData.navigation.toggleDrawer();
-          }}
-        />
-      </HeaderButtons>
-    ),
-    headerRight: () => (
-      <HeaderButtons HeaderButtonComponent={HeaderButton}>
-        <Item
-          title="Add"
-          iconName={Platform.OS === 'android' ? 'md-create' : 'ios-create'}
-          onPress={() => {
-            navData.navigation.navigate('EditPost');
           }}
         />
       </HeaderButtons>
@@ -104,4 +72,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserPostsScreen;
+export default BookedRidesScreen;

@@ -8,8 +8,10 @@ import Post from '../../components/main/post1';
 import Colors from '../../constants/Colors';
 import * as postActions from '../../store/actions/post';
 
-const UserPostsScreen = (props) => {
-  const hostedRides = useSelector((state) => state.posts.hostedRides);
+const HostedRidesHistoryScreen = (props) => {
+  const hostedRidesHistory = useSelector(
+    (state) => state.posts.hostedRidesHistory
+  );
   const dispatch = useDispatch();
 
   const selectPostHandler = (id) => {
@@ -31,7 +33,7 @@ const UserPostsScreen = (props) => {
     ]);
   };
 
-  if (hostedRides.length === 0) {
+  if (hostedRidesHistory.length === 0) {
     return (
       <View style={styles.center}>
         <Text>No post found. Maybe start posting some!</Text>
@@ -41,7 +43,7 @@ const UserPostsScreen = (props) => {
 
   return (
     <FlatList
-      data={hostedRides}
+      data={hostedRidesHistory}
       keyExtractor={(item) => item.id}
       renderItem={(itemData) => (
         <Post
@@ -68,9 +70,9 @@ const UserPostsScreen = (props) => {
   );
 };
 
-UserPostsScreen.navigationOptions = (navData) => {
+HostedRidesHistoryScreen.navigationOptions = (navData) => {
   return {
-    headerTitle: 'Hosted Rides',
+    headerTitle: 'Hosted Rides History',
     headerLeft: () => (
       <HeaderButtons HeaderButtonComponent={HeaderButton}>
         <Item
@@ -78,17 +80,6 @@ UserPostsScreen.navigationOptions = (navData) => {
           iconName={Platform.OS === 'android' ? 'md-menu' : 'ios-menu'}
           onPress={() => {
             navData.navigation.toggleDrawer();
-          }}
-        />
-      </HeaderButtons>
-    ),
-    headerRight: () => (
-      <HeaderButtons HeaderButtonComponent={HeaderButton}>
-        <Item
-          title="Add"
-          iconName={Platform.OS === 'android' ? 'md-create' : 'ios-create'}
-          onPress={() => {
-            navData.navigation.navigate('EditPost');
           }}
         />
       </HeaderButtons>
@@ -104,4 +95,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserPostsScreen;
+export default HostedRidesHistoryScreen;
